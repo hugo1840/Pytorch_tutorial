@@ -34,6 +34,7 @@ A typical training procedure for a neural network is as follows:
 
 Define the network 
 ------------------
+# https://pytorch.org/docs/stable/nn.html?highlight=conv2d#torch.nn.Conv2d
 
 Let’s define this network: 
 """
@@ -46,17 +47,29 @@ class Net(nn.Module):
 
     def __init__(self):
         super(Net, self).__init__()
-        # 1 input image channel, 6 output channels, 5x5 square convolution
-        # kernel
+        # conv1: in_channels = 1, out_channels = 6, kernel_size = 5
+        # if kernel_size is a single int, height = width = kernel_size
+        # so here conv1 got a 5x5 square convolution kernel
+        # By default: stride = 1, padding = 0, bias = True
+        # shape of weight = out_channels * in_channels * height * width
+        # shape of bias = out_channels
         self.conv1 = nn.Conv2d(1, 6, 5)
         self.conv2 = nn.Conv2d(6, 16, 5)
         # an affine operation: y = Wx + b
+        # int_features = size of input samples = 16*5*5
+        # out_feature = size of output features = 120
+        # shape of weight: out_features * int_features
+        # bias = True
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, 84)
+        # fc3: out_features = 10
         self.fc3 = nn.Linear(84, 10)
 
     def forward(self, x):
+        # functional.relu: element-wise
         # Max pooling over a (2, 2) window
+        # max_pool2d(input, kernel_size, stride=NOne, padding=0)
+        # kernel_size = the size of the window to take a max over
         x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
         # If the size is a square you can only specify a single number
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
@@ -87,7 +100,11 @@ print(net)
 
 params = list(net.parameters())
 print(len(params))
-print(params[0].size())  # conv1's .weight
+print("params-0: ", params[0].size())  # conv1's .weight: 6*1*5*5
+print("params-1: ", params[1].size())  # conv1's .bias: 6
+print("params-4: ", params[4].size())  # fc1's weight: 120*400
+print("params-5: ", params[5].size())  # fc1's bias: 120
+
 
 ########################################################################
 # Let try a random 32x32 input
@@ -101,7 +118,7 @@ print(out)
 ########################################################################
 # Zero the gradient buffers of all parameters and backprops with random
 # gradients:
-net.zero_grad() 
+net.zero_grad()  # set gradients of all model parameters to zero 
 out.backward(torch.randn(1, 10))
 
 ########################################################################
@@ -156,7 +173,7 @@ out.backward(torch.randn(1, 10))
 # For example:
 
 output = net(input)
-target = torch.arange(1, 11)  # a dummy target, for example
+target = torch.arange(1, 11)  # a dummy target: 1,2,3,...,9,10
 target = target.view(1, -1)  # make it the same shape as output
 criterion = nn.MSELoss()
 
