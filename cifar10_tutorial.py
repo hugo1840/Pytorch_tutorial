@@ -63,12 +63,25 @@ import torchvision.transforms as transforms
 # The output of torchvision datasets are PILImage images of range [0, 1].
 # We transform them to Tensors of normalized range [-1, 1].
 
+# transforms.ToTensor converts a PIL Image or numpy.ndarray (HxWxC) in [0, 255] 
+# to a tensor of shape(CxHxW) in [0.0, 1.0]
+# transfroms.Normalize(mean, std)
+# mean: sequence of means for each channel
+# std: sequence of standard deviations for each channel
+
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=True, transform=transform)
+
+# trainset: from which to load the data
+# batch_size: how many samples per batch to load, default=1
+# shuffle: have the data reshuffled at every epoch, default=False
+# num_workers: how many subprocesses to use for data loading, default=0
+# num_workers=0 means the data will be loaded in the main process 
+
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
                                           shuffle=True, num_workers=2)
 
@@ -97,6 +110,7 @@ def imshow(img):
 
 # get some random training images
 dataiter = iter(trainloader)
+# get a batch with 4 images
 images, labels = dataiter.next()
 
 # show images
@@ -155,6 +169,9 @@ optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 # We simply have to loop over our data iterator, and feed the inputs to the
 # network and optimize.
 
+# enumerate() 函数用于将一个可遍历的数据对象(如列表、元组或字符串)组合
+# 为一个索引序列，同时列出数据和数据下标，一般用在 for 循环当中
+
 for epoch in range(2):  # loop over the dataset multiple times
 
     running_loss = 0.0
@@ -172,6 +189,8 @@ for epoch in range(2):  # loop over the dataset multiple times
         optimizer.step()
 
         # print statistics
+        # Tensor.item() returns the value of a one-element tensor
+        # as a standard Python number
         running_loss += loss.item()
         if i % 2000 == 1999:    # print every 2000 mini-batches
             print('[%d, %5d] loss: %.3f' %
@@ -210,6 +229,10 @@ outputs = net(images)
 # Higher the energy for a class, the more the network
 # thinks that the image is of the particular class.
 # So, let's get the index of the highest energy:
+    
+# torch.max(input, dim)
+# dim=0: max in each column, dim=1: max in each row
+# returns (tensor of max values, index of each values)
 _, predicted = torch.max(outputs, 1)
 
 print('Predicted: ', ' '.join('%5s' % classes[predicted[j]]
@@ -240,6 +263,10 @@ print('Accuracy of the network on the 10000 test images: %d %%' % (
 #
 # Hmmm, what are the classes that performed well, and the classes that did
 # not perform well:
+    
+# torch.no_grad() disables gradient calculation
+# torch.squeeze() returns a tensor with all the dimensions of input
+# of size 1 removed.
 
 class_correct = list(0. for i in range(10))
 class_total = list(0. for i in range(10))
